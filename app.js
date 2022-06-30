@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use(auth.initialize())
 app.use(passport.session())
 
-// app.use('/api/*', auth.authenticate())
+app.use('/api/*', auth.authenticate())
 app.use('/api/admin/*', auth.restrict)
 
 require('./src/routes')(app)
