@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon ./bin/www",
-    "test": "standard --fix && jest",
     "fresh-install": "rm -rf node_modules && npm cache clean && yarn"
   },
   "author": "",
@@ -33,24 +32,6 @@
     "swagger-jsdoc": "^6.2.1"
   },
   "devDependencies": {
-    "jest": "^28.1.1",
-    "nodemon": "^2.0.18",
-    "standard": "^17.0.0",
-    "supertest": "^6.2.3"
-  },
-  "jest": {
-    "testEnvironment": "node"
-  },
-  "env": {
-    "jest": true
-  },
-  "standard": {
-    "env": [
-      "jest"
-    ],
-    "ignore": [
-      "/public/**/*.js",
-      "/lib/**/*.js"
-    ]
+    "nodemon": "^2.0.18"
   }
 }
