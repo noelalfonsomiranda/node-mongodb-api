@@ -1,0 +1,32 @@
+// This will be our application entry. We'll setup our server and database here.
+const normalizePort = require('normalize-port');
+const mongoose = require("mongoose");
+const debug = require('debug')('http')
+  , http = require('http')
+  , name = 'My Server';
+const chalk = require('chalk');
+const server = require('../app');
+
+const port = normalizePort(process.env.PORT, 10) || 8080;
+server.set('port', port);
+
+// connect to MongoDB
+(async () => {
+  try {
+      const conn = await mongoose.connect(process.env.MONGODB_URL, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+      });
+      // console.log(`🔗 ${chalk.green('[database] host:')} ${chalk.cyan(conn.connection.host)}`);
+      console.log(`${chalk.green('[database]')} connected to MongoDB 🔥`);
+  } catch (err) {
+      console.log(`${chalk.red('[database]')} connection failed: ${err}`);
+      process.exit(1);
+  }
+})()
+
+// create server
+http.createServer(server).listen(port, () => {
+  debug('booting %o', name);
+  console.log(`${chalk.green('[server]')} is up on port ${port} ☕️`);
+});
