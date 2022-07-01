@@ -20,7 +20,7 @@ module.exports = {
 
             // execute when todo exist
             TodoModel.findOneAndUpdate(
-              req.params.todoId,
+              { _id: req.params.todoId },
               { $push: { items: todoItem._id } },
               { new: true, useFindAndModify: false },
               (err, todo) => {
