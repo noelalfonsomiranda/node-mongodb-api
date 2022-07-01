@@ -4,7 +4,7 @@ const TodoModel = require('../models/todo')
 const NOT_FOUND = 'TodoItem Not Found'
 
 module.exports = {
-  async createTodoItem (req, res) {
+  async createTodoItem (req, res, next) {
     await TodoItemModel.create({
       content: req.body.content,
       todo_id: req.params.todoId
@@ -29,8 +29,7 @@ module.exports = {
             )
           }
         )
-      })
-      .catch((err) => res.send(err))
+      }).catch((err) => next(err))
   },
   updateTodoItem (req, res) {
     TodoItemModel.findOneAndUpdate(
@@ -42,14 +41,17 @@ module.exports = {
         }
       },
       { new: true },
-      (err, todo) => {
-        if (err) return res.send(err) // handles error first
-        if (!todo) return res.json({ success: false, message: NOT_FOUND })
-        res.json(todo)
-      }
-    )
+      // (err, todo) => {
+      //   if (err) return res.send(err) // handles error first
+      //   if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      //   res.json(todo)
+      // }
+    ).then(todo => {
+      if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      res.send(todo)
+    }).catch(err => next(err))
   },
-  async deleteTodoItem (req, res) {
+  async deleteTodoItem (req, res, next) {
     await TodoItemModel.deleteOne({ _id: req.params.todoItemId })
       .then(todoItem => {
         if (!todoItem.deletedCount) return res.json({ success: false, message: NOT_FOUND })
@@ -58,12 +60,11 @@ module.exports = {
           { _id: req.params.todoId },
           { $pull: { items: { $in: [req.params.todoItemId] } } },
           { new: true, useFindAndModify: false },
-          (err, todo) => res.json({
+          () => res.json({
             success: true,
             message: `TodoItem ${req.params.todoItemId} Deleted`
           })
         )
-      })
-      .catch((err) => res.send(err))
+      }).catch((err) => next(err))
   }
 }

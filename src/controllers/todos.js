@@ -3,39 +3,40 @@ const TodoModel = require('../models/todo')
 const NOT_FOUND = 'Todo Not Found'
 
 module.exports = {
-  getTodoWithPopulatedItems: async (req, res) => {
+  getTodoWithPopulatedItems: async (req, res, next) => {
     const { todoId } = req.params
-    const todo = await TodoModel.findById(todoId).populate('items')
-    if (!todo) return res.json({ success: false, message: NOT_FOUND })
-    res.send(todo)
+    await TodoModel.findById(todoId).populate('items')
+      .then((todo) => {
+        if (!todo) return res.json({ success: false, message: NOT_FOUND })
+        res.send(todo)
+      })
+      .catch(err => next(err))
   },
-  getTodoList (req, res) {
-    TodoModel.find((err, todos) => {
-      if (err) return res.send(err)
-      res.json(todos)
-    })
+  async getTodoList (req, res, next) {
+    await TodoModel.find()
+      .then(todoList => res.send(todoList))
+      .catch(err => next(err))
   },
-  async getTodo (req, res) {
+  async getTodo (req, res, next) {
     await TodoModel.findOne({ _id: req.params.todoId })
       .then((todo) => {
         if (!todo) return res.json({ success: false, message: NOT_FOUND })
         res.send(todo)
       })
-      .catch((err) => res.send(err))
+      .catch(err => next(err))
   },
-  createTodo (req, res) {
+  createTodo (req, res, next) {
     const todo = new TodoModel({
       title: req.body.title,
       description: req.body.description,
       completed: req.body.completed
     })
 
-    todo.save((err, todo) => {
-      if (err) return res.send(err)
-      res.json(todo)
-    })
+    todo.save()
+      .then(() => res.json(todo))
+      .catch(err => next(err))
   },
-  updateTodo (req, res) {
+  updateTodo (req, res, next) {
     TodoModel.findOneAndUpdate(
       { _id: req.params.todoId },
       {
@@ -46,19 +47,22 @@ module.exports = {
         }
       },
       { new: true },
-      (err, todo) => {
-        if (err) return res.send(err) // handles error first
-        if (!todo) return res.json({ success: false, message: NOT_FOUND })
-        res.send(todo)
-      }
-    )
+      // (err, todo) => {
+      //   if (err) return res.send(err) // handles error first
+      //   if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      //   res.send(todo)
+      // }
+    ).then(todo => {
+      if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      res.send(todo)
+    }).catch(err => next(err))
   },
-  async deleteTodo (req, res) {
+  async deleteTodo (req, res, next) {
     await TodoModel.deleteOne({ _id: req.params.todoId })
-      .then((todo) => {
+      .then(todo => {
         if (!todo.deletedCount) return res.json({ success: false, message: NOT_FOUND })
         res.json({ success: true, message: `Todo ${req.params.todoId} Deleted` })
       })
-      .catch((err) => res.send(err))
+      .catch(err => next(err))
   }
 }

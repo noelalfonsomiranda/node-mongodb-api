@@ -16,6 +16,6 @@ module.exports = (err, req, res, next) => {
     return res.status(401).json({ message: 'You are not authenticated.', success: false })
   }
 
-  // return res.status(400).json({ message: err.message, success: false })
-  return next(err)
+  // return next(err)
+  return res.status(400).json({ message: `Error: ${err.message}`, success: false })
 }
