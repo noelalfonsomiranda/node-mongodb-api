@@ -1,5 +1,5 @@
 module.exports = (err, req, res, next) => {
-  console.log(err, req, res, next)
+  console.log(err)
   if (typeof err === 'string') {
     return res.status(400).json({ message: err, success: false })
   }
@@ -16,5 +16,6 @@ module.exports = (err, req, res, next) => {
     return res.status(401).json({ message: 'You are not authenticated.', success: false })
   }
 
-  return res.status(400).json({ message: err.message, success: false })
+  // return res.status(400).json({ message: err.message, success: false })
+  return next(err)
 }
