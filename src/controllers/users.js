@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const User = require('../models/user')
+const UserModel = require('../models/user')
 
 const { hash, comparePassword } = require('../services/bcrypt.service')
 // const authService = require('../services/auth.service')
@@ -8,20 +8,20 @@ const { sendMail } = require('../services/email.service')
 const { generateCode } = require('../services/randomString.service')
 
 module.exports = {
-  async register (req, res) {
+  async register (req, res, next) {
     const { firstName, lastName, email, password } = req.body
 
     try {
-      const existingUser = await User.findOne({
+      const existingUser = await UserModel.findOne({
         email
       })
       if (existingUser) {
         // throw new Error("User exists already.");
-        return res.json({ success: false, message: 'User exists already.' })
+        return res.status(400).json({ success: false, message: 'User exists already.' })
       }
       const hashedPassword = await hash(password, 10)
       const inviteCode = await generateCode()
-      await User.create({
+      await UserModel.create({
         firstName,
         lastName,
         email,
@@ -29,26 +29,22 @@ module.exports = {
         inviteCode
       })
         .then(async (user) => {
-          try {
-            const verificationToken = issue({
-              payload: {
-                email
-              }
-            })
+          const verificationToken = issue({
+            payload: {email}
+          })
+          const data = {
+            from: 'hello@test.com',
+            to: email,
+            subject: 'Email Verification',
+            text: `
+            Here's the link to verify your account.
+            ${process.env.APP_BASE_URL}/verify-email?token=${verificationToken}`
+          }
 
-            const data = {
-              from: 'hello@test.com',
-              to: email,
-              subject: 'Email Verification',
-              text: `
-              Here's the link to verify your account.
-              ${process.env.APP_BASE_URL}/verify-email?token=${verificationToken}
-              `
-            }
-
-            await sendMail(data)
-
-            return res.status(200).json({
+          const sendEmailVerification = await sendMail(data)
+          
+          if (sendEmailVerification) {
+            res.status(200).json({
               success: true,
               message: 'Successfully registered user',
               data: {
@@ -58,10 +54,8 @@ module.exports = {
                 role: user.role
               }
             })
-          } catch (error) {
-            return next(error)
           }
-        })
+        }).catch(err => next(err))
 
       // res.json({
       //   user: {
@@ -71,7 +65,7 @@ module.exports = {
       //   },
       // });
     } catch (err) {
-      res.json({ status: 500, message: 'Invalid email', error: err })
+      return next(err)
     }
   },
 
@@ -79,10 +73,10 @@ module.exports = {
     try {
       const { email } = verify(req.query.token)
 
-      const user = await User.findOne({ email })
+      const user = await UserModel.findOne({ email })
 
       if (user.emailVerified) {
-        throw 'User already verified'
+        throw 'Your account already verified'
       }
 
       user.emailVerified = true
@@ -94,22 +88,19 @@ module.exports = {
         message: 'Email successfully verified'
       })
     } catch (err) {
-      // return next(err)
-      return res.send(err)
+      return next(err)
     }
   },
 
-  async login (req, res) {
+  async login (req, res, next) {
     const { email, password } = req.body
 
     try {
-      const user = await User.findOne({
-        email
-      })
+      const user = await UserModel.findOne({email})
 
       if (!user || !user?.emailVerified) {
         return res.status(404).json({
-          status: 404,
+          success: false,
           message: 'User does not exists or not yet verified'
         })
       }
@@ -138,18 +129,16 @@ module.exports = {
         expiration: '12h'
       })
 
-      if (isPasswordValid) {
+      if (isPasswordValid)
         return res.status(200).json({
           success: true,
           message: 'Successfully login',
           token,
           data: payload
         })
-      } else {
-        return res.json({ status: 404, user: false })
-      }
+      res.status(400).json({ success: false, message: "Invalid login details" })
     } catch (err) {
-      res.json({ status: 500, message: 'Invalid login' })
+      return next(err)
     }
   },
 
@@ -167,26 +156,25 @@ module.exports = {
     }
   },
 
-  async getUserList (req, res) {
+  async getUserList (req, res, next) {
     // get all users
-    const users = await User.find()
-
-    if (!users) {
-      return res.json({ status: 'error', message: 'No users found' })
-    }
-    res.json({ status: 200, users })
+    await UserModel.find()
+      .then(users => {
+        if (!users) return res.status(404).json({ success: false, message: 'No users found' })
+        res.status(200).send(users)
+      }).catch(err => next(err))
   },
 
-  async getUser (req, res) {
-    await User.findOne({ _id: req.params.userId })
-      .then((user) => {
-        if (!user) return res.json({ success: false, message: 'No users found' })
-        res.send(user)
+  async getUser (req, res, next) {
+    await UserModel.findOne({ _id: req.params.userId })
+      .then(user => {
+        if (!user) return res.status(404).json({ success: false, message: 'No users found' })
+        res.status(200).send(user)
       })
-      .catch((err) => res.send(err))
+      .catch(err => res.send(err))
   },
 
-  async updateUser (req, res) {
+  async updateUser (req, res, next) {
     const {
       email,
       password,
@@ -196,7 +184,7 @@ module.exports = {
     const userId = req.params.userId
     try {
       const hashedPassword = await bcrypt.hash(password, 10)
-      const user = await User.findByIdAndUpdate(userId, {
+      const user = await UserModel.findByIdAndUpdate(userId, {
         $set: {
           email,
           password: hashedPassword,
@@ -205,23 +193,26 @@ module.exports = {
         }
       })
       if (!user) {
-        return res.json({ status: 404, message: 'Invalid user' })
+        return res.status(400).json({ success: false, message: 'Invalid user' })
       }
-      res.json({ status: 200, message: 'User successfully updated' })
+      res.status(200).json({ success: true, message: 'User successfully updated' })
     } catch (err) {
-      res.json({ status: 500, message: 'Invalid user' })
+      return next(err)
     }
   },
 
-  async deleteUser (req, res) {
+  async deleteUser (req, res, next) {
     try {
-      const user = await User.findByIdAndDelete(req.params.userId)
+      const user = await UserModel.findByIdAndDelete(req.params.userId)
       if (!user) {
-        return res.json({ status: 404, message: 'Invalid user' })
+        return res.status(400).json({ success: false, message: 'Invalid user' })
       }
-      res.json({ status: 200, user })
+      res.status(200).json({
+        success: true,
+        message: `${user.email}: user successfully deleted!`
+      })
     } catch (err) {
-      res.json({ status: 500, message: 'Invalid user' })
+      return next(err)
     }
   }
 }
