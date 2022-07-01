@@ -7,21 +7,21 @@ module.exports = {
     const { todoId } = req.params
     await TodoModel.findById(todoId).populate('items')
       .then((todo) => {
-        if (!todo) return res.json({ success: false, message: NOT_FOUND })
-        res.send(todo)
+        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+        res.status(200).send(todo)
       })
       .catch(err => next(err))
   },
   async getTodoList (req, res, next) {
     await TodoModel.find()
-      .then(todoList => res.send(todoList))
+      .then(todoList => res.status(200).send(todoList))
       .catch(err => next(err))
   },
   async getTodo (req, res, next) {
     await TodoModel.findOne({ _id: req.params.todoId })
       .then((todo) => {
-        if (!todo) return res.json({ success: false, message: NOT_FOUND })
-        res.send(todo)
+        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+        res.status(200).send(todo)
       })
       .catch(err => next(err))
   },
@@ -33,7 +33,7 @@ module.exports = {
     })
 
     todo.save()
-      .then(() => res.json(todo))
+      .then(() => res.status(200).json(todo))
       .catch(err => next(err))
   },
   updateTodo (req, res, next) {
@@ -53,15 +53,15 @@ module.exports = {
       //   res.send(todo)
       // }
     ).then(todo => {
-      if (!todo) return res.json({ success: false, message: NOT_FOUND })
-      res.send(todo)
+      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+      res.status(200).send(todo)
     }).catch(err => next(err))
   },
   async deleteTodo (req, res, next) {
     await TodoModel.deleteOne({ _id: req.params.todoId })
       .then(todo => {
-        if (!todo.deletedCount) return res.json({ success: false, message: NOT_FOUND })
-        res.json({ success: true, message: `Todo ${req.params.todoId} Deleted` })
+        if (!todo.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND })
+        res.status(200).json({ success: true, message: `Todo ${req.params.todoId} Deleted` })
       })
       .catch(err => next(err))
   }

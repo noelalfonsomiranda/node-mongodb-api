@@ -13,9 +13,10 @@ module.exports = {
         TodoModel.findOne(
           { _id: req.params.todoId },
           (err, todo) => {
-            if (err) return res.send(err) // handles error first
+            if (err) return res.status(400).send(err) // handles error first
             // check if todo exist
-            if (!todo || !todoItem?.todo_id || !todoItem.todo_id.equals(req.params.todoId)) { return res.json({ success: false, message: 'Todo Not Found' }) }
+            if (!todo || !todoItem?.todo_id || !todoItem.todo_id.equals(req.params.todoId))
+              return res.status(404).json({ success: false, message: 'Todo Not Found' })
 
             // execute when todo exist
             TodoModel.findOneAndUpdate(
@@ -23,13 +24,13 @@ module.exports = {
               { $push: { items: todoItem._id } },
               { new: true, useFindAndModify: false },
               (err, todo) => {
-                if (err) return res.send(err) // handles error first
-                res.send(todoItem)
+                if (err) return res.status(400).send(err) // handles error first
+                res.status(200).send(todoItem)
               }
             )
           }
         )
-      }).catch((err) => next(err))
+      }).catch(err => next(err))
   },
   updateTodoItem (req, res) {
     TodoItemModel.findOneAndUpdate(
@@ -47,20 +48,20 @@ module.exports = {
       //   res.json(todo)
       // }
     ).then(todo => {
-      if (!todo) return res.json({ success: false, message: NOT_FOUND })
-      res.send(todo)
+      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+      res.status(200).send(todo)
     }).catch(err => next(err))
   },
   async deleteTodoItem (req, res, next) {
     await TodoItemModel.deleteOne({ _id: req.params.todoItemId })
       .then(todoItem => {
-        if (!todoItem.deletedCount) return res.json({ success: false, message: NOT_FOUND })
+        if (!todoItem.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND })
 
         TodoModel.findOneAndUpdate(
           { _id: req.params.todoId },
           { $pull: { items: { $in: [req.params.todoItemId] } } },
           { new: true, useFindAndModify: false },
-          () => res.json({
+          () => res.status(200).json({
             success: true,
             message: `TodoItem ${req.params.todoItemId} Deleted`
           })
