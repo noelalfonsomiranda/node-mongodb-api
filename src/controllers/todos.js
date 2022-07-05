@@ -1,13 +1,13 @@
 const TodoModel = require('../models/todo')
 
-const NOT_FOUND = 'Todo Not Found'
+const {NOT_FOUND} = require('../constants')
 
 module.exports = {
   getTodoWithPopulatedItems: async (req, res, next) => {
     const { todoId } = req.params
     await TodoModel.findById(todoId).populate('items')
       .then((todo) => {
-        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND.TODO })
         res.status(200).send(todo)
       })
       .catch(err => next(err))
@@ -20,7 +20,7 @@ module.exports = {
   async getTodo (req, res, next) {
     await TodoModel.findOne({ _id: req.params.todoId })
       .then((todo) => {
-        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+        if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND.TODO })
         res.status(200).send(todo)
       })
       .catch(err => next(err))
@@ -49,18 +49,18 @@ module.exports = {
       { new: true },
       // (err, todo) => {
       //   if (err) return res.send(err) // handles error first
-      //   if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      //   if (!todo) return res.json({ success: false, message: NOT_FOUND.TODO })
       //   res.send(todo)
       // }
     ).then(todo => {
-      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND.TODO })
       res.status(200).send(todo)
     }).catch(err => next(err))
   },
   async deleteTodo (req, res, next) {
     await TodoModel.deleteOne({ _id: req.params.todoId })
       .then(todo => {
-        if (!todo.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND })
+        if (!todo.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND.TODO })
         res.status(200).json({ success: true, message: `Todo ${req.params.todoId} Deleted` })
       })
       .catch(err => next(err))

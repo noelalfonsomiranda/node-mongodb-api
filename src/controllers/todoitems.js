@@ -1,7 +1,7 @@
 const TodoItemModel = require('../models/todoitem')
 const TodoModel = require('../models/todo')
 
-const NOT_FOUND = 'TodoItem Not Found'
+const {NOT_FOUND} = require('../constants')
 
 module.exports = {
   async createTodoItem (req, res, next) {
@@ -16,7 +16,7 @@ module.exports = {
             if (err) return res.status(400).send(err) // handles error first
             // check if todo exist
             if (!todo || !todoItem?.todo_id || !todoItem.todo_id.equals(req.params.todoId))
-              return res.status(404).json({ success: false, message: 'Todo Not Found' })
+              return res.status(404).json({ success: false, message: NOT_FOUND.TODO })
 
             // execute when todo exist
             TodoModel.findOneAndUpdate(
@@ -44,18 +44,18 @@ module.exports = {
       { new: true },
       // (err, todo) => {
       //   if (err) return res.send(err) // handles error first
-      //   if (!todo) return res.json({ success: false, message: NOT_FOUND })
+      //   if (!todo) return res.json({ success: false, message: NOT_FOUND.TODO_ITEM })
       //   res.json(todo)
       // }
     ).then(todo => {
-      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND })
+      if (!todo) return res.status(404).json({ success: false, message: NOT_FOUND.TODO_ITEM })
       res.status(200).send(todo)
     }).catch(err => next(err))
   },
   async deleteTodoItem (req, res, next) {
     await TodoItemModel.deleteOne({ _id: req.params.todoItemId })
       .then(todoItem => {
-        if (!todoItem.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND })
+        if (!todoItem.deletedCount) return res.status(404).json({ success: false, message: NOT_FOUND.TODO_ITEM })
 
         TodoModel.findOneAndUpdate(
           { _id: req.params.todoId },

@@ -7,6 +7,8 @@ const { issue, verify } = require('../middleware/auth')
 const { generateCode } = require('../middleware/randomString')
 const { sendMail } = require('../services/email')
 
+const {NOT_FOUND} = require('../constants')
+
 module.exports = {
   async register (req, res, next) {
     const { firstName, lastName, email, password } = req.body
@@ -17,7 +19,7 @@ module.exports = {
       })
       if (existingUser) {
         // throw new Error("User exists already.");
-        return res.status(400).json({ success: false, message: 'User exists already.' })
+        return res.status(400).json({ success: false, message: 'Email is already registered' })
       }
       const hashedPassword = await hash(password, 10)
       const inviteCode = await generateCode()
@@ -46,7 +48,7 @@ module.exports = {
           if (sendEmailVerification) {
             res.status(200).json({
               success: true,
-              message: 'Successfully registered user',
+              message: 'User successfully registered',
               data: {
                 firstName: user.firstName,
                 lastName: user.lastName,
@@ -76,7 +78,7 @@ module.exports = {
       const user = await UserModel.findOne({ email })
 
       if (user.emailVerified) {
-        throw 'Your account already verified'
+        throw 'Your account is already verified'
       }
 
       user.emailVerified = true
@@ -160,7 +162,7 @@ module.exports = {
     // get all users
     await UserModel.find()
       .then(users => {
-        if (!users) return res.status(404).json({ success: false, message: 'No users found' })
+        if (!users) return res.status(404).json({ success: false, message: NOT_FOUND.USER })
         res.status(200).send(users)
       }).catch(err => next(err))
   },
@@ -168,7 +170,7 @@ module.exports = {
   async getUser (req, res, next) {
     await UserModel.findOne({ _id: req.params.userId })
       .then(user => {
-        if (!user) return res.status(404).json({ success: false, message: 'No users found' })
+        if (!user) return res.status(404).json({ success: false, message: NOT_FOUND.USER })
         res.status(200).send(user)
       })
       .catch(err => res.send(err))
@@ -209,7 +211,7 @@ module.exports = {
       }
       res.status(200).json({
         success: true,
-        message: `${user.email}: user successfully deleted!`
+        message: `${user.email}: user successfully deleted`
       })
     } catch (err) {
       return next(err)
