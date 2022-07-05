@@ -9,8 +9,8 @@ const helmet = require('helmet')
 const cors = require('cors')
 const dotenv = require('dotenv')
 
-const auth = require('./src/services/passport.service')()
-const errorHandler = require('./src/services/errorHandler.service')
+const auth = require('./src/middleware/passport')()
+const errorHandler = require('./src/middleware/errorHandler')
 
 dotenv.config()
 const app = express()

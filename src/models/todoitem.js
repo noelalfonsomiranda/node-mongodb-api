@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
-const TodoItemSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+const TodoItemSchema = new Schema({
   content: {
     type: String
   },
@@ -9,7 +10,7 @@ const TodoItemSchema = new mongoose.Schema({
     default: false
   },
   todo_id: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Todo'
   },
   createdAt: {

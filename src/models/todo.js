@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
 
-const TodoSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+
+const TodoSchema = new Schema({
   title: {
     type: String,
     required: true
@@ -14,7 +16,7 @@ const TodoSchema = new mongoose.Schema({
   },
   items: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'TodoItem'
     }
   ],

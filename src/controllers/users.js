@@ -1,11 +1,11 @@
 const bcrypt = require('bcrypt')
 const UserModel = require('../models/user')
 
-const { hash, comparePassword } = require('../services/bcrypt.service')
-// const authService = require('../services/auth.service')
-const { issue, verify } = require('../services/auth.service')
-const { sendMail } = require('../services/email.service')
-const { generateCode } = require('../services/randomString.service')
+const { hash, comparePassword } = require('../middleware/bcrypt')
+// const authService = require('../middleware/auth')
+const { issue, verify } = require('../middleware/auth')
+const { generateCode } = require('../middleware/randomString')
+const { sendMail } = require('../services/email')
 
 module.exports = {
   async register (req, res, next) {
