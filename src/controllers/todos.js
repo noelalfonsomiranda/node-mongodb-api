@@ -1,4 +1,4 @@
-const TodoModel = require('../models/todo')
+const {TodoModel} = require('../models')
 
 const {NOT_FOUND} = require('../constants')
 

@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt')
-const UserModel = require('../models/user')
+const {UserModel} = require('../models')
+
 
 const { hash, comparePassword } = require('../middleware/bcrypt')
 // const authService = require('../middleware/auth')
