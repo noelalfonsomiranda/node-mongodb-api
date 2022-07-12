@@ -169,7 +169,7 @@ module.exports = {
   },
 
   async getUser (req, res, next) {
-    await UserModel.findOne({ _id: req.params.userId })
+    await UserModel.findOne({ _id: req.params.userId }).select("-password")
       .then(user => {
         if (!user) return res.status(404).json({ success: false, message: NOT_FOUND.USER })
         res.status(200).send(user)
